@@ -45,4 +45,22 @@ class OrderItem(models.Model):
         super().save(*args, **kwargs)
         self.order.refresh_from_db()
         self.order.update_total()
+        
+class Payments(models.Model):
+    order=models.OneToOneField(Order, on_delete=models.CASCADE, related_name="payment")
+    amount=models.PositiveIntegerField()
+    status=models.CharField(max_length=20, choices=[
+        ('pending', 'Pending'),
+        ('completed', 'Completed'),
+        ('failed', 'Failed'),
+    ], default='pending')
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    def save(self, *args, **kwargs):
+        if not self.amount:
+            self.amount = self.order.total
+        super().save(*args, **kwargs)
 
+    def __str__(self):
+        return f"Payment for Order {self.order.id} - {self.status}"
+    
