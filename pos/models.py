@@ -10,7 +10,7 @@ class Customer(models.Model):
         return self.name
 class Product(models.Model):
     name = models.CharField(max_length=100)
-    price = models.DecimalField(max_digits=8, decimal_places=2)
+    price = models.IntegerField()
     stock = models.PositiveIntegerField(default=0)
 
     def __str__(self):
@@ -19,7 +19,7 @@ class Product(models.Model):
 class Order(models.Model):
     customer = models.ForeignKey(Customer, on_delete=models.SET_NULL, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
-    total = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    total = models.IntegerField(default=0)
     order_items = models.ManyToManyField(Product, through='OrderItem')
     status = models.CharField(max_length=20, choices=[('Pending', 'Pending'), ('Completed', 'Completed'), ('Cancelled', 'Cancelled')], default='Pending')
     created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
@@ -32,7 +32,7 @@ class OrderItem(models.Model):
     order = models.ForeignKey(Order, related_name='items', on_delete=models.CASCADE)
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     quantity = models.PositiveIntegerField(default=1)
-    subtotal = models.DecimalField(max_digits=8, decimal_places=2, default=0)
+    subtotal = models.IntegerField(default=0)
     
     def save(self, *args, **kwargs):
         self.subtotal = self.product.price * self.quantity
