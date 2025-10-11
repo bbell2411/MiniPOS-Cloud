@@ -2,12 +2,13 @@ from django.db import models
 from django.contrib.auth.models import User
 
 class Customer(models.Model):
-    name=models.CharField(max_length=100)
+    name=models.CharField(max_length=100, null=False, blank=False)
     email=models.EmailField(unique=True, null=True, blank=True)
     phone=models.CharField(max_length=15, unique=True, null=True, blank=True)
      
     def __str__(self):
         return self.name
+    
 class Product(models.Model):
     name = models.CharField(max_length=100, unique=True)
     price = models.IntegerField()
@@ -24,6 +25,11 @@ class Order(models.Model):
     status = models.CharField(max_length=20, choices=[('Pending', 'Pending'), ('Completed', 'Completed'), ('Cancelled', 'Cancelled')], default='Pending')
     created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
     
+    def update_total(self):
+        total = sum(item.subtotal for item in self.items.all())
+        self.total = total
+        self.save()
+    
     def __str__(self):
         return f"Order {self.id}"
     
@@ -37,4 +43,6 @@ class OrderItem(models.Model):
     def save(self, *args, **kwargs):
         self.subtotal = self.product.price * self.quantity
         super().save(*args, **kwargs)
+        self.order.refresh_from_db()
+        self.order.update_total()
 
