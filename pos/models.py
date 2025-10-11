@@ -9,7 +9,7 @@ class Customer(models.Model):
     def __str__(self):
         return self.name
 class Product(models.Model):
-    name = models.CharField(max_length=100)
+    name = models.CharField(max_length=100, unique=True)
     price = models.IntegerField()
     stock = models.PositiveIntegerField(default=0)
 
