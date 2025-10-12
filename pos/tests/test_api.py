@@ -67,6 +67,14 @@ class TestApi:
         response=api_client.get("/api/products/99999/")
         assert response.status_code==404
         assert response.data["error"]=="Product not found."
-        
+    
+    def test_get_all_customers(self,api_client,customers):
+        response=api_client.get("/api/customers/")
+        assert response.status_code==200
+        for i,customer in enumerate(response.data):
+            assert customer["name"]==customers[i].name
+            assert customer["email"]==customers[i].email
+            assert int(customer["phone"])==customers[i].phone
+            
         
 
