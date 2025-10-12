@@ -75,6 +75,18 @@ class TestApi:
             assert customer["name"]==customers[i].name
             assert customer["email"]==customers[i].email
             assert int(customer["phone"])==customers[i].phone
-            
+
+    def test_get_customer_by_id(self, api_client, customers):
+        customer= customers[0]
+        response=api_client.get(f"/api/customers/{customer.id}/")
+        assert response.status_code==200
+        assert response.data["name"]==customer.name
+        assert int(response.data["phone"])==customer.phone
+        assert response.data["email"]==customer.email
         
+    def test_get_customer_by_id_not_found_404(self,api_client,customers):
+        response= api_client.get("/api/customers/9999/")
+        assert response.status_code==404
+        assert response.data["error"]=="customer not found."
+    
 

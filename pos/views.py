@@ -22,8 +22,19 @@ class ProductDetailView(APIView):
             return Response({"error":"Product not found."}, status=404)
 
 class CustomerListView(APIView):
-    def get(slef,request):
+    def get(self,request):
         """Get all Customers"""
         customers=Customer.objects.all()
         serializer=CustomerSerializer(customers,many=True)
         return Response(serializer.data)
+    
+class CustomerDetailView(APIView):
+    def get(self, request,customer_id):
+        """Get individual customer"""
+        try:
+            customer=Customer.objects.get(id=customer_id)
+            serializer=CustomerSerializer(customer)
+            return Response(serializer.data)
+            
+        except Customer.DoesNotExist:
+            return Response({"error":"customer not found."},status=404)
