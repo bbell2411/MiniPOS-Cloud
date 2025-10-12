@@ -40,8 +40,8 @@ def orders(customers,products):
     return [order1,order2]
 
 @pytest.fixture
-def payments(orders,customers,products):
-    payments= Payments.objects.create(order=orders[2],amount=orders[2].total)
+def payments(orders):
+    payments= Payments.objects.create(order=orders[1])
     return [payments]
 
 @pytest.mark.django_db
@@ -88,5 +88,14 @@ class TestApi:
         response= api_client.get("/api/customers/9999/")
         assert response.status_code==404
         assert response.data["error"]=="customer not found."
-    
+
+    def test_get_all_payments(self,api_client,payments):
+        response=api_client.get("/api/payments/")
+        assert response.status_code==200
+        for i,payment in enumerate(response.data):
+            assert payment["order"]==payments[i].order.id
+            assert payment["amount"]==payments[i].amount
+            assert payment["status"]==payments[i].status
+            
+            
 
