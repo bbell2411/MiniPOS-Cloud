@@ -22,8 +22,7 @@ class Order(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     total = models.IntegerField(default=0)
     order_items = models.ManyToManyField(Product, through='OrderItem')
-    status = models.CharField(max_length=20, choices=[('Pending', 'Pending'), ('Completed', 'Completed'), ('Cancelled', 'Cancelled')], default='Pending')
-    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    status = models.CharField(max_length=20, choices=[('Pending', 'pending'), ('Completed', 'completed'), ('Cancelled', 'cancelled')], default='Pending')
     
     def update_total(self):
         total = sum(item.subtotal for item in self.items.all())
