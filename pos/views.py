@@ -1,7 +1,7 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from .serializers import ProductSerializer
-from .models import Product
+from .serializers import ProductSerializer, CustomerSerializer
+from .models import Product, Customer
 
 class ProductListView(APIView):
     def get(self, request):
@@ -20,3 +20,10 @@ class ProductDetailView(APIView):
         
         except Product.DoesNotExist:
             return Response({"error":"Product not found."}, status=404)
+
+class CustomerListView(APIView):
+    def get(slef,request):
+        """Get all Customers"""
+        customers=Customer.objects.all()
+        serializer=CustomerSerializer(customers,many=True)
+        return Response(serializer.data)
