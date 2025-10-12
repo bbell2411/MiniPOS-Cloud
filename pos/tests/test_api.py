@@ -96,6 +96,21 @@ class TestApi:
             assert payment["order"]==payments[i].order.id
             assert payment["amount"]==payments[i].amount
             assert payment["status"]==payments[i].status
-            
+    
+    def test_get_payment_by_id(self,api_client,payments):
+        payment=payments[0]
+        response=api_client.get(f"/api/payments/{payment.id}/")
+        assert response.status_code==200
+        assert response.data["id"]==payment.id
+        assert response.data["order"]==payment.order.id
+        assert response.data["status"]==payment.status
+        assert response.data["amount"]==payment.amount
+        
+    def test_get_payment_by_id_not_found_404(self,api_client,payments):
+        response=api_client.get("/api/payments/9999/")
+        assert response.status_code==404
+        assert response.data["error"]=="Payment not found."
+
+           
             
 

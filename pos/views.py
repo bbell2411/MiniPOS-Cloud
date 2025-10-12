@@ -44,3 +44,12 @@ class PaymentsListView(APIView):
         payments=Payments.objects.all()
         serializer=PaymentsSerializer(payments,many=True)
         return Response(serializer.data)
+
+class PaymentDetailView(APIView):
+    def  get(self, request,payment_id):
+        try:
+            payment=Payments.objects.get(id=payment_id)
+            serializer=PaymentsSerializer(payment)
+            return Response(serializer.data)
+        except Payments.DoesNotExist:
+            return Response({"error":"Payment not found."},status=404)
