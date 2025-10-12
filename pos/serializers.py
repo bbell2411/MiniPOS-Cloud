@@ -31,3 +31,4 @@ class PaymentsSerializer(serializers.ModelSerializer):
         model=Payments
         fields="__all__"
         read_only_fields=["amount","created_at"]
+        
