@@ -9,3 +9,14 @@ class ProductListView(APIView):
         products=Product.objects.all()
         serializer=ProductSerializer(products, many=True)
         return Response(serializer.data)
+    
+class ProductDetailView(APIView):
+    def get(self, request, product_id):
+        """Get individual product"""
+        try:
+            product=Product.objects.get(id=product_id)
+            serializer=ProductSerializer(product)
+            return Response(serializer.data)
+        
+        except Product.DoesNotExist:
+            return Response({"error":"Product not found."})
