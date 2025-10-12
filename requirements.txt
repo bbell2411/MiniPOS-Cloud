@@ -1,0 +1,14 @@
+django>=5.0
+djangorestframework>=3.15
+psycopg2-binary
+python-dotenv
+django-cors-headers
+
+# Future enhancements
+celery
+redis
+gunicorn
+
+# Dev tools
+pytest
+pytest-django
