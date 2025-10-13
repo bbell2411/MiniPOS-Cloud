@@ -110,7 +110,19 @@ class TestApi:
         response=api_client.get("/api/payments/9999/")
         assert response.status_code==404
         assert response.data["error"]=="Payment not found."
-
-           
+    
+    def test_get_all_orders(self, api_client, orders):
+        response=api_client.get("/api/orders/")
+        assert response.status_code==200
+        for i,order in enumerate(response.data):
+            assert order["customer"]==orders[i].customer.id
+            assert order["created_at"] == orders[i].created_at.isoformat().replace("+00:00", "Z")
+            assert order["total"]==orders[i].total
+            assert order["status"]==orders[i].status
+            assert order["order_items"]==list(orders[i].order_items.values_list("id",flat=True))
+            
+        assert isinstance(order["order_items"], list)
+            
+            
             
 
