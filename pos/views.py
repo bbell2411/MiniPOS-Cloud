@@ -1,7 +1,7 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from .serializers import ProductSerializer, CustomerSerializer, PaymentsSerializer, OrderSerializer
-from .models import Product, Customer, Payments, Order
+from .serializers import ProductSerializer, CustomerSerializer, PaymentsSerializer, OrderSerializer, OrderItemSerializer
+from .models import Product, Customer, Payments, Order, OrderItem
 
 class ProductListView(APIView):
     def get(self, request):
@@ -66,5 +66,23 @@ class OrderDetailView(APIView):
             order=Order.objects.get(id=order_id)
             serializer=OrderSerializer(order)
             return Response(serializer.data)
+        except Order.DoesNotExist:
+            return Response({"error":"Order not found."},status=404)
+        
+class OrderItemsListView(APIView):
+    def get(self,request,order_id, item_id=None):
+        try:
+            order=Order.objects.get(id=order_id)
+            
+            if item_id:
+                item=order.items.get(id=item_id)
+                serializer=OrderItemSerializer(item)
+            else:
+                items=order.items.all()
+                serializer=OrderItemSerializer(items,many=True)
+            return Response(serializer.data)
+                
+        except OrderItem.DoesNotExist:
+            return Response({"error":"Item not found."}, status=404)
         except Order.DoesNotExist:
             return Response({"error":"Order not found."},status=404)
