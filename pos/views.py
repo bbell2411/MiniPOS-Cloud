@@ -59,3 +59,12 @@ class OrderListView(APIView):
         orders=Order.objects.all()
         serializer=OrderSerializer(orders, many=True)
         return Response(serializer.data)
+
+class OrderDetailView(APIView):
+    def get(self,request,order_id):
+        try:
+            order=Order.objects.get(id=order_id)
+            serializer=OrderSerializer(order)
+            return Response(serializer.data)
+        except Order.DoesNotExist:
+            return Response({"error":"Order not found."},status=404)

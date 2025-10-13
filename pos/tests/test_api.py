@@ -122,7 +122,25 @@ class TestApi:
             assert order["order_items"]==list(orders[i].order_items.values_list("id",flat=True))
             
         assert isinstance(order["order_items"], list)
-            
+        
+    def test_get_order_by_id(self,api_client,orders):
+        order=orders[1]
+        response=api_client.get(f"/api/orders/{order.id}/")
+        assert response.status_code==200
+        assert response.data["customer"]==order.customer.id
+        assert response.data["created_at"]==order.created_at.isoformat().replace("+00:00","Z")
+        assert response.data["total"]==order.total
+        assert response.data["status"]==order.status
+        assert response.data["order_items"]==list(order.order_items.values_list("id",flat=True))
+        assert response.data["id"]==order.id
+    
+    def test_get_order_by_id_not_found_404(self,api_client,orders):
+        response=api_client.get("/api/orders/999/")
+        assert response.status_code==404
+        assert response.data["error"]=="Order not found."
+
+        
+        
             
             
 
