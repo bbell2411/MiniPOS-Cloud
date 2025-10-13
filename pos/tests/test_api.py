@@ -156,6 +156,21 @@ class TestApi:
         assert response.status_code==404
         assert response.data["error"]=="Order not found."
                 
-            
-            
+    def test_get_order_items_by_id(self,api_client,orders):
+        order=orders[0]
+        item=order.items.all()[0]
+        response=api_client.get(f"/api/orders/{order.id}/items/{item.id}/")
+        assert response.status_code==200
+        assert response.data["id"]==item.id
+        assert response.data["order"]==item.order.id
+        assert response.data["product"]==item.product.id
+        assert response.data["quantity"]==item.quantity
+        assert response.data["subtotal"]==item.subtotal
+        
+    def test_get_order_items_by_id_item_not_found_404(self,api_client,orders):
+        order=orders[0]
+        response=api_client.get(f"/api/orders/{order.id}/items/999/")
+        assert response.status_code==404
+        assert response.data["error"]=="Item not found."
+        
 
