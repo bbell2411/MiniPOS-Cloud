@@ -178,7 +178,7 @@ class TestApi:
             "name":"bell",
             "email":"bell@gmail.com"
         }
-        response=api_client.post("/api/customers/",payload)
+        response=api_client.post("/api/customers/",payload, format="json")
         assert response.status_code==201
         assert response.data["name"]==payload["name"]
         assert response.data["email"]==payload["email"]
@@ -189,5 +189,27 @@ class TestApi:
         assert new_customer.name==payload["name"]
         assert new_customer.email==payload["email"]
         
+    def test_post_customer_invalid_data_400(self,api_client,customers):
+        payload={
+            "name":" "
+        }
+        response=api_client.post("/api/customers/",payload)
+        assert response.status_code==400
+        assert "name" in response.data
         
+    def test_post_customer_missing_data_400(self,api_client,customers):
+        payload={
+            "phone":87272672
+        }
+        response=api_client.post("/api/customers/",payload)
+        assert response.status_code==400
+        assert "name" in response.data
         
+    def test_post_customer_missing_data_400(self,api_client,customers):
+        payload={
+            "phone":"not a number",
+            "name":"bell"
+        }
+        response=api_client.post("/api/customers/",payload)
+        assert response.status_code==400
+        assert "phone" in response.data
