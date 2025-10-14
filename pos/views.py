@@ -32,9 +32,7 @@ class CustomerListView(APIView):
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=201)
-        return Response(serializer.errors, status=400)
-
-            
+        return Response(serializer.errors, status=400)        
         
 class CustomerDetailView(APIView):
     def get(self, request,customer_id):
@@ -45,6 +43,19 @@ class CustomerDetailView(APIView):
             
         except Customer.DoesNotExist:
             return Response({"error":"customer not found."},status=404)
+        
+    def patch(self,request,customer_id):
+        try:
+            customer= Customer.objects.get(id=customer_id)
+        except Customer.DoesNotExist:
+            return Response({"error":"Customer not found."},status=404)
+        serializer = CustomerSerializer(customer, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=400)
+
+    
         
 class PaymentsListView(APIView):
     def get(self, request):
