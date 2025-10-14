@@ -173,4 +173,21 @@ class TestApi:
         assert response.status_code==404
         assert response.data["error"]=="Item not found."
         
-
+    def test_post_customer(self,api_client,customers):
+        payload={
+            "name":"bell",
+            "email":"bell@gmail.com"
+        }
+        response=api_client.post("/api/customers/",payload)
+        assert response.status_code==201
+        assert response.data["name"]==payload["name"]
+        assert response.data["email"]==payload["email"]
+        assert response.data["phone"] is None
+        assert Customer.objects.count() == len(customers)+1
+        
+        new_customer=Customer.objects.last()
+        assert new_customer.name==payload["name"]
+        assert new_customer.email==payload["email"]
+        
+        
+        

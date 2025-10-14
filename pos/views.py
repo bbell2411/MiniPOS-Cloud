@@ -1,5 +1,6 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework.exceptions import ValidationError
 from .serializers import ProductSerializer, CustomerSerializer, PaymentsSerializer, OrderSerializer, OrderItemSerializer
 from .models import Product, Customer, Payments, Order, OrderItem
 
@@ -12,7 +13,6 @@ class ProductListView(APIView):
     
 class ProductDetailView(APIView):
     def get(self, request, product_id):
-        """Get individual product"""
         try:
             product=Product.objects.get(id=product_id)
             serializer=ProductSerializer(product)
@@ -23,14 +23,21 @@ class ProductDetailView(APIView):
 
 class CustomerListView(APIView):
     def get(self,request):
-        """Get all Customers"""
         customers=Customer.objects.all()
         serializer=CustomerSerializer(customers,many=True)
         return Response(serializer.data)
     
+    def post(self,request):
+        serializer= CustomerSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=201)
+        return Response(serializer.errors, status=400)
+
+            
+        
 class CustomerDetailView(APIView):
     def get(self, request,customer_id):
-        """Get individual customer"""
         try:
             customer=Customer.objects.get(id=customer_id)
             serializer=CustomerSerializer(customer)
