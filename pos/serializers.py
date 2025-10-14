@@ -22,6 +22,7 @@ class OrderItemSerializer(serializers.ModelSerializer):
         read_only_fields=["subtotal"]
         
 class CustomerSerializer(serializers.ModelSerializer):
+    name=serializers.CharField(required=True)
     class Meta:
         model= Customer
         fields="__all__"
