@@ -251,4 +251,15 @@ class TestApi:
         response=api_client.patch(f"/api/customers/{customer.id}/",payload, format="json")
         assert response.status_code==400
         assert "phone" in response.data
-                
+    
+    def test_delete_customer(self,api_client,customers):
+        #only admins (implementation later)
+        customer=customers[0]
+        response=api_client.delete(f"/api/customers/{customer.id}/")
+        assert response.status_code==204
+        assert Customer.objects.count()==len(customers)-1
+
+    def test_delete_customer_not_found_404(self,api_client,customers):
+        response=api_client.delete("/api/customers/6747/")
+        assert response.status_code==404
+        assert response.data["error"]=="Customer not found."
