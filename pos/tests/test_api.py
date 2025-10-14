@@ -263,3 +263,31 @@ class TestApi:
         response=api_client.delete("/api/customers/6747/")
         assert response.status_code==404
         assert response.data["error"]=="Customer not found."
+        
+    def test_post_order(self,api_client,orders,customers):
+        #again only admin/employees laterrrr
+        customer=customers[1]
+        payload={
+            "customer":customer.id,
+            }
+        response=api_client.post("/api/orders/", payload,format="json")
+        assert response.status_code==201
+        assert response.data["customer"]==payload["customer"]
+        assert "created_at" in response.data
+        assert response.data["total"]==0
+        assert response.data["status"].lower()=="pending"
+        assert len(response.data["order_items"])==0
+        assert Order.objects.count()==len(orders)+1
+        
+    def test_post_order_missing_data_400(self,api_client,orders):
+        payload={}
+        response=api_client.post("/api/orders/",payload,format="json")
+        assert response.status_code==400
+        assert "customer" in response.data
+    
+    def test_post_order_invalid_data_400(self,api_client,orders):
+        payload={"customer":"hey"}
+        response=api_client.post("/api/orders/",payload,format="json")
+        assert response.status_code==400
+        assert "customer" in response.data
+        

@@ -8,11 +8,15 @@ class ProductSerializer(serializers.ModelSerializer):
         fields="__all__"
 
 class OrderSerializer(serializers.ModelSerializer):
-    total=serializers.IntegerField(min_value=0)
+    total=serializers.IntegerField(min_value=0, read_only=True)
+    customer = serializers.PrimaryKeyRelatedField(
+        queryset=Customer.objects.all(), 
+        required=True
+    )
     class Meta:
         model=Order
         fields="__all__"
-        read_only_fields = ["total", "created_at", "created_by"]
+        read_only_fields = ["total", "created_at"]
 
 class OrderItemSerializer(serializers.ModelSerializer):
     quantity = serializers.IntegerField(min_value=1)

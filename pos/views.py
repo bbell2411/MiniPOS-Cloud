@@ -83,6 +83,13 @@ class OrderListView(APIView):
         orders=Order.objects.all()
         serializer=OrderSerializer(orders, many=True)
         return Response(serializer.data)
+    
+    def post(self,request):
+        serializer=OrderSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=201)
+        return Response(serializer.errors, status=400)
 
 class OrderDetailView(APIView):
     def get(self,request,order_id):
@@ -110,3 +117,5 @@ class OrderItemsListView(APIView):
             return Response({"error":"Item not found."}, status=404)
         except Order.DoesNotExist:
             return Response({"error":"Order not found."},status=404)
+        
+        #order item detail view!!!!!
