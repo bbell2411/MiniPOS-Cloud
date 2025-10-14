@@ -4,7 +4,7 @@ from django.contrib.auth.models import User
 class Customer(models.Model):
     name=models.CharField(max_length=100, null=False, blank=False)
     email=models.EmailField(unique=True, null=True, blank=True)
-    phone=models.CharField(max_length=15, unique=True, null=True, blank=True)
+    phone=models.IntegerField(max_length=15, unique=True, null=True, blank=True)
      
     def __str__(self):
         return self.name

@@ -22,10 +22,16 @@ class OrderItemSerializer(serializers.ModelSerializer):
         read_only_fields=["subtotal"]
         
 class CustomerSerializer(serializers.ModelSerializer):
-    name=serializers.CharField(required=True)
+    name=serializers.CharField(required=True, allow_blank=False)
     class Meta:
         model= Customer
         fields="__all__"
+    def validate_name(self, value):
+        if not isinstance(value, str):
+            raise serializers.ValidationError("Name must be a string.")
+        if not value.strip():
+            raise serializers.ValidationError("Name cannot be empty.")
+        return value
         
 class PaymentsSerializer(serializers.ModelSerializer):
     class Meta:
