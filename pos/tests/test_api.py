@@ -213,3 +213,42 @@ class TestApi:
         response=api_client.post("/api/customers/",payload)
         assert response.status_code==400
         assert "phone" in response.data
+        
+    def test_patch_customer(self, api_client, customers):
+        payload={
+            "email":"newEmail@gmai.com"
+        }
+        customer=customers[1]
+        response=api_client.patch(f"/api/customers/{customer.id}/",payload, format="json")
+        assert response.status_code==200
+        customer.refresh_from_db()
+        assert customer.email==payload["email"]
+    
+    def test_patch_customer_not_found_404(self,api_client,customers):
+        payload={
+            "email":"newEmail@gmai.com"
+        }
+        response=api_client.patch("/api/customers/676877/",payload,format="json")
+        assert response.status_code==404
+        assert response.data["error"]=="Customer not found."
+        
+    def test_patch_customer_no_change_200(self,api_client,customers):
+        payload={
+        }
+        customer=customers[1]
+        response=api_client.patch(f"/api/customers/{customer.id}/",payload, format="json")
+        assert response.status_code==200
+        customer.refresh_from_db()
+        assert response.data["name"]==customer.name
+        assert response.data["email"]==customer.email        
+        assert response.data["phone"]==customer.phone  
+    
+    def test_patch_customer_invalid_data_400(self,api_client,customers):
+        payload={
+            "phone":"newEmail@gmai.com"
+        }
+        customer=customers[1]
+        response=api_client.patch(f"/api/customers/{customer.id}/",payload, format="json")
+        assert response.status_code==400
+        assert "phone" in response.data
+                
