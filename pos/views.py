@@ -54,8 +54,14 @@ class CustomerDetailView(APIView):
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=400)
-
     
+    def delete(self, request, customer_id):
+        try:
+            customer= Customer.objects.get(id=customer_id)
+            customer.delete()
+            return Response(status=204)
+        except Customer.DoesNotExist:
+            return Response({"error":"Customer not found."},status=404)
         
 class PaymentsListView(APIView):
     def get(self, request):
