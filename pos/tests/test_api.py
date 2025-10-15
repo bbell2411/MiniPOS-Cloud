@@ -189,6 +189,31 @@ class TestApi:
         assert new_customer.name==payload["name"]
         assert new_customer.email==payload["email"]
         
+    def test_post_order_items(self,api_client,orders,products):
+        order=orders[0]
+        product=products[2]
+        
+        initial_count = OrderItem.objects.filter(order=order).count()
+        
+        payload={
+            "order":order.id,
+            "product":product.id,
+            "quantity":5
+        }
+        response=api_client.post(f"/api/orders/{payload["order"]}/items/", payload, format="json")
+        assert response.status_code==201
+        assert response.data["order"]==payload["order"]
+        assert response.data["product"]==payload["product"]
+        assert response.data["quantity"]==payload["quantity"]
+        assert response.data["subtotal"]== products[2].price*payload["quantity"]
+        
+        updated_order_items=OrderItem.objects.filter(order=order.id)
+        assert updated_order_items.count()==initial_count+1
+        
+        assert updated_order_items.last().product.id==payload["product"]
+        assert updated_order_items.last().quantity==payload["quantity"]
+        assert updated_order_items.last().order.id==payload["order"]
+        
     def test_post_customer_invalid_data_400(self,api_client,customers):
         payload={
             "name":" "
