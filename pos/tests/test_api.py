@@ -173,22 +173,6 @@ class TestApi:
         assert response.status_code==404
         assert response.data["error"]=="Item not found."
         
-    def test_post_customer(self,api_client,customers):
-        payload={
-            "name":"bell",
-            "email":"bell@gmail.com"
-        }
-        response=api_client.post("/api/customers/",payload, format="json")
-        assert response.status_code==201
-        assert response.data["name"]==payload["name"]
-        assert response.data["email"]==payload["email"]
-        assert response.data["phone"] is None
-        assert Customer.objects.count() == len(customers)+1
-        
-        new_customer=Customer.objects.last()
-        assert new_customer.name==payload["name"]
-        assert new_customer.email==payload["email"]
-        
     def test_post_order_items(self,api_client,orders,products):
         order=orders[0]
         product=products[2]
@@ -213,6 +197,58 @@ class TestApi:
         assert updated_order_items.last().product.id==payload["product"]
         assert updated_order_items.last().quantity==payload["quantity"]
         assert updated_order_items.last().order.id==payload["order"]
+        
+    def test_post_order_items_not_found_404(self, api_client, orders, products):
+        order=orders[0]
+        product=products[2]
+        payload={
+            "order":order.id,
+            "product":product.id,
+            "quantity":5
+        }
+        response=api_client.post("/api/orders/8989/items/", payload, format="json")
+        assert response.status_code==404
+        assert response.data["error"]=="Order not found."
+        
+    def test_post_order_items_missing_data_400(self, api_client, orders, products):
+        order=orders[0]
+        product=products[2]
+        payload={
+            "order":order.id,
+            "quantity":5
+        }
+        response=api_client.post(f"/api/orders/{payload["order"]}/items/", payload, format="json")
+        assert response.status_code==400
+        assert "product" in response.data
+
+    def test_post_order_items_invalid_data_400(self, api_client, orders, products):
+        order=orders[0]
+        product=products[2]
+        payload={
+            "order":order.id,
+            "product":product.id,
+            "quantity":"string"
+        }
+        response=api_client.post(f"/api/orders/{payload["order"]}/items/", payload, format="json")
+        assert response.status_code==400
+        assert "quantity" in response.data
+        
+    def test_post_customer(self,api_client,customers):
+        payload={
+            "name":"bell",
+            "email":"bell@gmail.com"
+        }
+        response=api_client.post("/api/customers/",payload, format="json")
+        assert response.status_code==201
+        assert response.data["name"]==payload["name"]
+        assert response.data["email"]==payload["email"]
+        assert response.data["phone"] is None
+        assert Customer.objects.count() == len(customers)+1
+        
+        new_customer=Customer.objects.last()
+        assert new_customer.name==payload["name"]
+        assert new_customer.email==payload["email"]
+        
         
     def test_post_customer_invalid_data_400(self,api_client,customers):
         payload={

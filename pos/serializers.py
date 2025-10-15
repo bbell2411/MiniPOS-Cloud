@@ -19,7 +19,15 @@ class OrderSerializer(serializers.ModelSerializer):
         read_only_fields = ["total", "created_at"]
 
 class OrderItemSerializer(serializers.ModelSerializer):
-    quantity = serializers.IntegerField(min_value=1)
+    order = serializers.PrimaryKeyRelatedField(
+        queryset=Order.objects.all(),
+        required=True
+    )
+    product = serializers.PrimaryKeyRelatedField(
+        queryset=Product.objects.all(),
+        required=True
+    )
+
     class Meta:
         model= OrderItem
         fields="__all__"
