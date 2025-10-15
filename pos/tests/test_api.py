@@ -233,6 +233,28 @@ class TestApi:
         assert response.status_code==400
         assert "quantity" in response.data
         
+    def test_patch_order_item(self, api_client, orders, products):
+        order=orders[0]
+        product=products[2]
+        post_payload={
+            "order":order.id,
+            "product":product.id,
+            "quantity":69
+        }
+        post_response=api_client.post(f"/api/orders/{order.id}/items/", post_payload, format="json")
+        assert post_response.status_code==201
+        posted_order_item=OrderItem.objects.filter(order=order.id).last()
+        
+        patch_payload={
+            "product":product.id,
+        }
+        product_price=Product.objects.get(id=product.id)
+        patch_response=api_client.patch(f"/api/orders/{order.id}/items/{posted_order_item.id}/", patch_payload, format="json")
+        assert patch_response.status_code==200
+        assert patch_response.data["product"]==patch_payload["product"]
+        assert patch_response.data["order"]==posted_order_item.order.id
+        assert patch_response.data["subtotal"] == product_price.price * patch_response.data["quantity"]
+        
     def test_post_customer(self,api_client,customers):
         payload={
             "name":"bell",

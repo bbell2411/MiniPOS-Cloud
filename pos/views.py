@@ -1,6 +1,5 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.exceptions import ValidationError
 from .serializers import ProductSerializer, CustomerSerializer, PaymentsSerializer, OrderSerializer, OrderItemSerializer
 from .models import Product, Customer, Payments, Order, OrderItem
 
@@ -129,4 +128,17 @@ class OrderItemsListView(APIView):
                 serializer.save(order=order)
                 return Response(serializer.data,status=201)
             return Response(serializer.errors,status=400)
-            
+        
+    def patch(self, request, order_id, item_id):
+        try:
+            item=OrderItem.objects.get(id=item_id)
+            order=Order.objects.get(id=order_id)
+        except Order.DoesNotExist:
+            return Response({"error":"Order not found."}, status=404)
+        except OrderItem.DoesNotExist:
+            return Response({"error":"Item not found."}, status=404)
+        serializer= OrderItemSerializer(data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save(order=order)
+            return Response(serializer.data, status=200)
+        return Response(serializer.errors, status=400)
