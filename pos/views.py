@@ -150,3 +150,14 @@ class OrderItemsListView(APIView):
             serializer.save(order=order)
             return Response(serializer.data, status=200)
         return Response(serializer.errors, status=400)
+    
+    def delete(self, request, order_id, item_id):
+        try:
+            order= Order.objects.get(id=order_id)
+            item= OrderItem.objects.get(id=item_id)
+            item.delete()
+            return Response(status=204)
+        except Order.DoesNotExist:
+            return Response({"error":"Order not found."}, status=404)
+        except OrderItem.DoesNotExist:
+            return Response({"error":"Item not found."},status=404)
