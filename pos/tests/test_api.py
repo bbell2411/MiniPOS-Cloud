@@ -405,17 +405,14 @@ class TestApi:
         assert response.status_code==404
         assert response.data["error"]=="Customer not found."
         
-    def test_patch_customer_no_change_200(self,api_client,customers):
+    def test_patch_customer_empty_payload_400(self,api_client,customers):
         payload={
         }
         customer=customers[1]
         response=api_client.patch(f"/api/customers/{customer.id}/",payload, format="json")
-        assert response.status_code==200
-        customer.refresh_from_db()
-        assert response.data["name"]==customer.name
-        assert response.data["email"]==customer.email        
-        assert response.data["phone"]==customer.phone  
-    
+        assert response.status_code==400
+        assert response.data["error"]=="No data provided."
+       
     def test_patch_customer_invalid_data_400(self,api_client,customers):
         payload={
             "phone":"newEmail@gmai.com"

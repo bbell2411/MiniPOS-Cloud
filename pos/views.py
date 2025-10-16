@@ -44,6 +44,8 @@ class CustomerDetailView(APIView):
             return Response({"error":"customer not found."},status=404)
         
     def patch(self,request,customer_id):
+        if not request.data:
+            return Response({"error": "No data provided."}, status=400)
         try:
             customer= Customer.objects.get(id=customer_id)
         except Customer.DoesNotExist:
