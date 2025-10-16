@@ -255,6 +255,96 @@ class TestApi:
         assert patch_response.data["order"]==posted_order_item.order.id
         assert patch_response.data["subtotal"] == product_price.price * patch_response.data["quantity"]
         
+    def test_patch_order_item_invalid_data_400(self, api_client, orders, products):
+        order=orders[0]
+        product=products[2]
+        post_payload={
+            "order":order.id,
+            "product":product.id,
+            "quantity":69
+        }
+        post_response=api_client.post(f"/api/orders/{order.id}/items/", post_payload, format="json")
+        assert post_response.status_code==201
+        posted_order_item=OrderItem.objects.filter(order=order.id).last()
+        
+        patch_payload={
+            "product":"two",
+        }
+        response=api_client.patch(f"/api/orders/{order.id}/items/{posted_order_item.id}/",patch_payload, format="json")
+        assert response.status_code==400
+        assert "product" in response.data
+        
+    def test_patch_order_item_not_found_404(self, api_client, orders, products):
+        order=orders[0]
+        product=products[2]
+        post_payload={
+            "order":order.id,
+            "product":product.id,
+            "quantity":69
+        }
+        post_response=api_client.post(f"/api/orders/{order.id}/items/", post_payload, format="json")
+        assert post_response.status_code==201
+        
+        patch_payload={
+            "quantity":4
+        }
+        
+        response=api_client.patch(f"/api/orders/{order.id}/items/897977/",patch_payload, format="json")
+        assert response.status_code==404
+        assert response.data["error"]=="Item not found."
+        
+    def test_patch_order_order_not_found_404(self, api_client, orders, products):
+        order=orders[0]
+        product=products[2]
+        post_payload={
+            "order":order.id,
+            "product":product.id,
+            "quantity":69
+        }
+        post_response=api_client.post(f"/api/orders/{order.id}/items/", post_payload, format="json")
+        assert post_response.status_code==201
+        posted_order_item=OrderItem.objects.filter(order=order.id).last()
+        
+        patch_payload={
+            "quantity":4
+        }
+        response=api_client.patch(f"/api/orders/867688/items/{posted_order_item.id}/",patch_payload, format="json")
+        assert response.status_code==404
+        assert response.data["error"]=="Order not found."
+        
+    def test_patch_order_item_not_in_order_404(self,api_client,products, orders):
+        order1=orders[0]
+        order2=orders[1]
+        product=products[0]
+        payload={
+            "order":order1.id,
+            "product":product.id
+        }
+        post_response=api_client.post(f"/api/orders/{payload['order']}/items/",payload,format="json")
+        assert post_response.status_code==201        
+        posted_order_item=OrderItem.objects.filter(order=order1.id).last()
+        patch_payload={
+            "quantity":2
+        }        
+        response=api_client.patch(f'/api/orders/{order2.id}/items/{posted_order_item.id}/',patch_payload,format="json")
+        assert response.status_code==404
+        assert response.data["error"]=="Item not found in this order."
+        
+    def test_patch_order_item_empty_payload(self,api_client,orders, products):
+        order=orders[0]
+        product=products[0]
+        post_payload={
+            "order":order.id,
+            "product":product.id
+        }
+        post_response=api_client.post(f"/api/orders/{post_payload['order']}/items/",post_payload, format="json")
+        assert post_response.status_code==201
+        posted_order_item=OrderItem.objects.filter(order=order).last()
+        payload={}
+        response=api_client.patch(f"/api/orders/{order.id}/items/{posted_order_item.id}/",payload, format="json")
+        assert response.status_code==400
+        assert response.data["error"]=="No data provided."
+        
     def test_post_customer(self,api_client,customers):
         payload={
             "name":"bell",
