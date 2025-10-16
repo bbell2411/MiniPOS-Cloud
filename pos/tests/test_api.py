@@ -345,6 +345,22 @@ class TestApi:
         assert response.status_code==400
         assert response.data["error"]=="No data provided."
         
+    def test_delete_order_item(self,api_client,orders,products):
+        order=orders[0]
+        product=products[0]
+        payload={
+            "order":order.id,
+            "product":product.id
+        }
+        post_response=api_client.post(f"/api/orders/{payload['order']}/items/",payload,format="json")
+        assert post_response.status_code==201
+        curr_count=len(OrderItem.objects.all())
+        
+        item=OrderItem.objects.filter(order=order.id).last()
+        response=api_client.delete(f"/api/orders/{payload['order']}/items/{item.id}/")
+        assert response.status_code==204
+        assert OrderItem.objects.all().count()== curr_count - 1
+        
     def test_post_customer(self,api_client,customers):
         payload={
             "name":"bell",
