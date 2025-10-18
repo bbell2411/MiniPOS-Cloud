@@ -101,6 +101,14 @@ class OrderDetailView(APIView):
         except Order.DoesNotExist:
             return Response({"error":"Order not found."},status=404)
         
+    def delete(self,request,order_id):
+        try:
+            order=Order.objects.get(id=order_id)
+        except Order.DoesNotExist:
+            return Response({"error":"Order not found."}, status=404)
+        order.delete()
+        return Response(status=204)
+        
 class OrderItemsListView(APIView):
     def get(self,request,order_id, item_id=None):
         try:

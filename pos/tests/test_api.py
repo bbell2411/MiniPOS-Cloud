@@ -402,7 +402,6 @@ class TestApi:
         
         assert response.status_code == 404
         assert response.data["error"] == "Item not found."
-
         
     def test_post_customer(self,api_client,customers):
         payload={
@@ -519,4 +518,23 @@ class TestApi:
         response=api_client.post("/api/orders/",payload,format="json")
         assert response.status_code==400
         assert "customer" in response.data
+    
+    def test_delete_order(self,api_client,orders,customers):
+        customer=customers[0]
+        payload={
+            "customer":customer.id
+        }
+        post_response=api_client.post("/api/orders/", payload, format="json")
+        assert post_response.status_code==201
+        order=Order.objects.filter(customer=customer).last()
+        assert Order.objects.filter(id=order.id).exists()
         
+        curr_order_count=Order.objects.all().count()
+        
+        response=api_client.delete(f"/api/orders/{order.id}/")
+        assert response.status_code==204 
+        assert not Order.objects.filter(id=order.id).exists()
+        assert Order.objects.all().count()==curr_order_count-1
+        get_response=api_client.get(f"/api/orders/{order.id}/")
+        assert get_response.status_code==404
+            
