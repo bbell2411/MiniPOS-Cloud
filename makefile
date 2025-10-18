@@ -6,7 +6,7 @@ migrations:
 seed:
 	python manage.py seed_db
 test:
-	pytest -rP
+	pytest -v -rP
 run:
 	python manage.py runserver
 clean:
