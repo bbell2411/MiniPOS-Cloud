@@ -361,6 +361,49 @@ class TestApi:
         assert response.status_code==204
         assert OrderItem.objects.all().count()== curr_count - 1
         
+    def test_delete_order_item_item_not_found_404(self,api_client,orders):
+        response=api_client.delete(f"/api/orders/{orders[0].id}/items/8734837/")
+        assert response.status_code==404
+        assert response.data["error"]=="Item not found."
+        
+    def test_delete_order_item_order_not_found_404(self,api_client,orders,products):
+        response=api_client.delete(f"/api/orders/87734/items/{products[0].id}/")
+        assert response.status_code==404
+        assert response.data["error"]=="Order not found."
+        
+    def test_delete_order_item_wrong_order_404(self,api_client,orders,products):
+        order=orders[0]
+        order2=orders[1]
+        product=products[0]
+        payload={
+            "order":order.id,
+            "product":product.id
+        }
+        post_response=api_client.post(f"/api/orders/{payload["order"]}/items/", payload, format="json")
+        assert post_response.status_code==201
+        order_item=OrderItem.objects.filter(order=order).last()
+        respoonse=api_client.delete(f"/api/orders/{order2.id}/items/{order_item.id}/")
+        assert respoonse.status_code==404
+        assert respoonse.data["error"]=="Item not found in this order."
+        
+    def test_delete_order_item_twice_404(self, api_client, orders, products):
+        order = orders[0]
+        product = products[0]
+        payload = {
+            "order": order.id,
+            "product": product.id
+            }
+        post_response = api_client.post(f"/api/orders/{order.id}/items/", payload, format="json")
+        assert post_response.status_code == 201
+        
+        item = OrderItem.objects.filter(order=order.id).last()
+        api_client.delete(f"/api/orders/{order.id}/items/{item.id}/")  
+        response = api_client.delete(f"/api/orders/{order.id}/items/{item.id}/")
+        
+        assert response.status_code == 404
+        assert response.data["error"] == "Item not found."
+
+        
     def test_post_customer(self,api_client,customers):
         payload={
             "name":"bell",
