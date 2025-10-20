@@ -108,7 +108,20 @@ class OrderDetailView(APIView):
             return Response({"error":"Order not found."}, status=404)
         order.delete()
         return Response(status=204)
-        
+    
+    def patch(self, request, order_id):
+        if not request.data:
+            return Response({"error":"No data provided."}, status=400)
+        try:
+            order= Order.objects.get(id=order_id)
+        except Order.DoesNotExist:
+            return Response({"error":"Order not found."}, status=404)
+        serializer=OrderSerializer(order, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=400)
+    
 class OrderItemsListView(APIView):
     def get(self,request,order_id, item_id=None):
         try:
