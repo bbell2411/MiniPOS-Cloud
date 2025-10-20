@@ -578,5 +578,23 @@ class TestApi:
         assert updated_order.customer.id==payload["customer"]
         assert list(updated_order.order_items.all()) == list(order.order_items.all())
         
+    def test_patch_order_not_found_404(self,api_client,orders,customers):
+        customer=customers[1]
+        payload={"customer":customer.id}
+        response=api_client.patch("/api/orders/778/", payload, format="json")
+        assert response.status_code==404
+        assert response.data["error"]=="Order not found."
         
+    def test_patch_order_invalid_data_400(self,api_client,orders):
+        order=orders[0]
+        payload={"customer":"not int"}
+        response=api_client.patch(f"/api/orders/{order.id}/", payload, format="json")
+        assert response.status_code==400
+        assert "customer" in response.data
         
+    def test_patch_order_empty_payload_400(self, api_client, orders):
+        order=orders[0]
+        payload={}
+        response=api_client.patch(f"/api/orders/{order.id}/", payload, format="json")
+        assert response.status_code==400
+        assert response.data["error"]=="No data provided."
