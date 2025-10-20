@@ -537,4 +537,28 @@ class TestApi:
         assert Order.objects.all().count()==curr_order_count-1
         get_response=api_client.get(f"/api/orders/{order.id}/")
         assert get_response.status_code==404
-            
+    
+    def test_delete_order_not_found_404(self, api_client, orders):
+        curr_count=Order.objects.all().count()
+        response=api_client.delete("/api/orders/478575/")
+        assert response.status_code==404
+        assert response.data["error"]=="Order not found."  
+        print(curr_count) 
+        assert Order.objects.all().count()==curr_count   
+        
+    def test_delete_order_twice_returns_404(self, api_client, customers):
+        customer = customers[0]
+        payload = {"customer": customer.id}
+        post_response = api_client.post("/api/orders/", payload, format="json")
+        assert post_response.status_code == 201
+
+        order = Order.objects.filter(customer=customer).last()
+
+        response = api_client.delete(f"/api/orders/{order.id}/")
+        assert response.status_code == 204
+
+        response_again = api_client.delete(f"/api/orders/{order.id}/")
+        assert response_again.status_code == 404
+        assert response_again.data["error"] == "Order not found." 
+    
+    
