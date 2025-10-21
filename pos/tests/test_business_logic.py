@@ -91,7 +91,3 @@ class TestBusinesslogic:
             item.quantity = products[0].stock + 1
             item.save()
         
-                
-        
-# test in endpoint for stock deduction
-# test for err to adding quantity if stock isnt enough
