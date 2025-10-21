@@ -165,9 +165,14 @@ class OrderItemsListView(APIView):
         if item.order.id != order.id:
             return Response({"error": "Item not found in this order."}, status=404)
         serializer= OrderItemSerializer(item, data=request.data, partial=True)
+        
         if serializer.is_valid():
-            serializer.save(order=order)
-            return Response(serializer.data, status=200)
+            try:
+                serializer.save(order=order)
+                return Response(serializer.data, status=200)
+            except ValueError as e:
+                return Response({"error": str(e)}, status=400)
+        
         return Response(serializer.errors, status=400)
     
     def delete(self, request, order_id, item_id):

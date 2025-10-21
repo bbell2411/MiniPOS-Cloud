@@ -403,6 +403,31 @@ class TestApi:
         assert response.status_code == 404
         assert response.data["error"] == "Item not found."
         
+    def test_patch_order_item_quantity_exceeds_stock_400(self,api_client, orders, products):
+        order=orders[0]
+        item=order.items.first()
+        
+        product=Product.objects.get(id=item.product.id)
+        max_stock_amount=product.stock
+        
+        payload={
+            "quantity":max_stock_amount+1
+        }
+        response= api_client.patch(f"/api/orders/{order.id}/items/{item.id}/", payload, format="json")
+        assert response.status_code==400
+        assert response.data["error"]==f'Not enough stock for {product.name}. Only {max_stock_amount} left.'
+    
+    def test_patch_order_item_quantity_exceeds_stock_400(self,api_client, orders, products):
+        order=orders[0]
+        item=order.items.first()
+        
+        payload={
+            "quantity":0
+        }
+        response= api_client.patch(f"/api/orders/{order.id}/items/{item.id}/", payload, format="json")
+        assert response.status_code==400
+        assert response.data["error"]==f"Quantity must be at least 1."
+        
     def test_post_customer(self,api_client,customers):
         payload={
             "name":"bell",
@@ -598,3 +623,4 @@ class TestApi:
         response=api_client.patch(f"/api/orders/{order.id}/", payload, format="json")
         assert response.status_code==400
         assert response.data["error"]=="No data provided."
+    
