@@ -40,9 +40,14 @@ class OrderItem(models.Model):
     subtotal = models.IntegerField(default=0)
     
     def save(self, *args, **kwargs):
+        if self.quantity < 1:
+            raise ValueError("Quantity must be at least 1.")
+
+        if self.quantity > self.product.stock:
+            raise ValueError(f"Not enough stock for {self.product.name}. Only {self.product.stock} left.")
+
         self.subtotal = self.product.price * self.quantity
         super().save(*args, **kwargs)
-        self.order.refresh_from_db()
         self.order.update_total()
         
 class Payments(models.Model):

@@ -63,8 +63,35 @@ class TestBusinesslogic:
         order.update_total()
         order.refresh_from_db()
         assert order.total==400
+    
+    def test_update_totals_quantity_change(self, orders):
+        order= orders[0]
+        assert order.total==400
         
+        items= order.items.all()
+        item = items.first()
         
+        item.quantity = 10
+        item.save()
+        order.refresh_from_db()
         
-# err for if item is out of stock or not
-# calc after changing quantity
+        assert order.total==1200
+        
+    def test_quantity_zero_raises_error(self, order1_items):
+        item= order1_items[0]
+        
+        with pytest.raises(ValueError, match="Quantity must be at least 1"):
+            item.quantity=0
+            item.save()
+            
+    def test_quantity_quantity_exceeds_stock_raise_error(self, order1_items, products):
+        item= order1_items[0]
+            
+        with pytest.raises(ValueError, match="Not enough stock"):
+            item.quantity = products[0].stock + 1
+            item.save()
+        
+                
+        
+# test in endpoint for stock deduction
+# test for err to adding quantity if stock isnt enough
