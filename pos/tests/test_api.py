@@ -1,6 +1,6 @@
 import pytest
 from rest_framework.test import APIClient
-from pos.models import Product,Customer, Order, Payments, OrderItem
+from pos.models import Product,Customer, Order, Payments, OrderItem, PaymentIntent
 
 @pytest.fixture
 def api_client():
@@ -623,4 +623,24 @@ class TestApi:
         response=api_client.patch(f"/api/orders/{order.id}/", payload, format="json")
         assert response.status_code==400
         assert response.data["error"]=="No data provided."
-    
+        
+    def test_payment_intent(self, api_client, orders):
+        order= orders[0]
+        response=api_client.post(f"/api/orders/{order.id}/payment-intent/")
+        assert response.status_code==201
+        assert response.data["status"]=="pending"
+        assert response.data["order"]==order.id
+        assert response.data["amount"]==order.total
+        assert "client_secret" in response.data
+        assert "id" in response.data
+        
+        payment_intent= PaymentIntent.objects.get(order=order)
+        assert payment_intent.amount == order.total
+        assert payment_intent.status == "pending"
+        assert payment_intent.intent_id.startswith("pi_")
+        assert payment_intent.client_secret == response.data["client_secret"]
+        assert payment_intent.intent_id is not None
+        assert payment_intent.intent_id.startswith("pi_")
+                    
+        
+        
