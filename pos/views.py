@@ -200,13 +200,14 @@ class PaymentIntentView(APIView):
         if order.status.lower()=="completed":
             return Response({"error":"This order is already marked as complete."}, status=400)
         
-        amount=order.amount
+        amount=order.total
         
         intent_id = f"pi_{uuid.uuid4().hex[:10]}"
         client_secret = f"secret_{uuid.uuid4().hex[:15]}"
         
         payment_intent= PaymentIntent.objects.create(
             intent_id= intent_id,
+            order=order,
             amount=amount,
             client_secret= client_secret,
             status="pending"
