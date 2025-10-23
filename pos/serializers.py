@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Product, Order, OrderItem, Customer, Payments
+from .models import Product, Order, OrderItem, Customer, Payments, PaymentIntent
 
 class ProductSerializer(serializers.ModelSerializer):
     price=serializers.IntegerField(min_value=0)
@@ -44,6 +44,13 @@ class CustomerSerializer(serializers.ModelSerializer):
         if not value.strip():
             raise serializers.ValidationError("Name cannot be empty.")
         return value
+    
+class PaymentIntentSerializer(serializers.ModelSerializer):
+    amount= serializers.IntegerField(min_value=1, required=True)
+    class Meta:
+        model= PaymentIntent
+        fields = ["id", "order", "amount", "client_secret", "status", "created_at"]
+        read_only_fields = ["id", "order", "client_secret", "status", "created_at", "amount"]
         
 class PaymentsSerializer(serializers.ModelSerializer):
     class Meta:
