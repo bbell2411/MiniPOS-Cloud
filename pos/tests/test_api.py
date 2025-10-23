@@ -642,5 +642,42 @@ class TestApi:
         assert payment_intent.intent_id is not None
         assert payment_intent.intent_id.startswith("pi_")
                     
+    def test_payment_intent_order_not_found_404(self, api_client, orders):
+        response=api_client.post("/api/orders/764746/payment-intent/")
+        assert response.status_code==404
+        assert response.data["error"]=="Order not found."
+        
+    def test_payment_intent_invalid_status_400(self, api_client, orders):
+        order=orders[0]
+        order.status="completed"
+        order.save()
+        response=api_client.post(f"/api/orders/{order.id}/payment-intent/")
+        assert response.status_code==400
+        assert response.data["error"]=="This order is already marked as complete."
+        
+    def test_payment_intent_invalid_order_amount_400(self, api_client, customers):
+        order=Order.objects.create(customer=customers[0])
+        response=api_client.post(f"/api/orders/{order.id}/payment-intent/")
+        assert response.status_code==400
+        assert response.data["error"]=="Order total can't be 0, nothing to purchase."
+        
+    def test_payment_intent_idempotancy(self, api_client, orders):
+        order=orders[0]
+        response=api_client.post(f"/api/orders/{order.id}/payment-intent/")
+        assert response.status_code==201
+        
+        second_response=api_client.post(f"/api/orders/{order.id}/payment-intent/")
+        assert second_response.status_code==400
+        assert second_response.data["error"]=="Payment intent already exists for this order."
+        
+    def test_payment_intent_amount_snapshot(self, api_client, orders, products):
+        order = orders[0]
+        
+        api_client.post(f"/api/orders/{order.id}/payment-intent/")
+        OrderItem.objects.create(order=order, product=products[2], quantity=1)
+        order.update_total()
+        
+        payment_intent = PaymentIntent.objects.get(order=order)
+        assert payment_intent.amount != order.total  
         
         
