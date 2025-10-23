@@ -46,7 +46,6 @@ class CustomerSerializer(serializers.ModelSerializer):
         return value
     
 class PaymentIntentSerializer(serializers.ModelSerializer):
-    amount= serializers.IntegerField(min_value=1, required=True)
     class Meta:
         model= PaymentIntent
         fields = ["id", "order", "amount", "client_secret", "status", "created_at"]
