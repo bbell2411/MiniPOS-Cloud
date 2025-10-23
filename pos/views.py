@@ -1,7 +1,8 @@
 from rest_framework.views import APIView
+import uuid
 from rest_framework.response import Response
-from .serializers import ProductSerializer, CustomerSerializer, PaymentsSerializer, OrderSerializer, OrderItemSerializer
-from .models import Product, Customer, Payments, Order, OrderItem
+from .serializers import ProductSerializer, CustomerSerializer, PaymentsSerializer, OrderSerializer, OrderItemSerializer, PaymentIntentSerializer
+from .models import Product, Customer, Payments, Order, OrderItem, PaymentIntent
 
 class ProductListView(APIView):
     def get(self, request):
@@ -188,3 +189,29 @@ class OrderItemsListView(APIView):
             return Response({"error": "Item not found in this order."}, status=404)
         item.delete()
         return Response(status=204)
+    
+class PaymentIntentView(APIView):
+    def post(self, request, order_id):
+        try:
+            order= Order.objects.get(id=order_id)
+        except Order.DoesNotExist:
+            return Response({"error":"Order not found."}, status=404)
+        
+        if order.status.lower()=="completed":
+            return Response({"error":"This order is already marked as complete."}, status=400)
+        
+        amount=order.amount
+        
+        intent_id = f"pi_{uuid.uuid4().hex[:10]}"
+        client_secret = f"secret_{uuid.uuid4().hex[:15]}"
+        
+        payment_intent= PaymentIntent.objects.create(
+            intent_id= intent_id,
+            amount=amount,
+            client_secret= client_secret,
+            status="pending"
+            )
+        serializer=PaymentIntentSerializer(payment_intent)
+        return Response(serializer.data, status=201)
+        
+        

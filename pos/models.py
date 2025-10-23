@@ -4,7 +4,7 @@ from django.contrib.auth.models import User
 class Customer(models.Model):
     name=models.CharField(max_length=100, null=False, blank=False)
     email=models.EmailField(unique=True, null=True, blank=True)
-    phone=models.IntegerField(max_length=15, unique=True, null=True, blank=True)
+    phone=models.IntegerField(unique=True, null=True, blank=True)
      
     def __str__(self):
         return self.name
@@ -49,6 +49,17 @@ class OrderItem(models.Model):
         self.subtotal = self.product.price * self.quantity
         super().save(*args, **kwargs)
         self.order.update_total()
+    
+class PaymentIntent(models.Model):
+    order=models.OneToOneField(Order, on_delete=models.CASCADE, related_name="payment_intent")
+    amount=models.PositiveIntegerField()
+    intent_id=models.CharField(unique=True)
+    client_secret=models.CharField(unique=True)
+    status=models.CharField(choices=[ 
+        ('pending', 'Pending'),
+        ('completed', 'Completed')])
+    created_at=models.DateTimeField(auto_now_add=True)
+
         
 class Payments(models.Model):
     order=models.OneToOneField(Order, on_delete=models.CASCADE, related_name="payment")
