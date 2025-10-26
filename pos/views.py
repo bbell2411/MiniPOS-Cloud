@@ -1,8 +1,8 @@
 from rest_framework.views import APIView
-import uuid
 from rest_framework.response import Response
 from .serializers import ProductSerializer, CustomerSerializer, PaymentsSerializer, OrderSerializer, OrderItemSerializer, PaymentIntentSerializer
 from .models import Product, Customer, Payments, Order, OrderItem, PaymentIntent
+from .payment.payment_gateway import Gateway
 
 class ProductListView(APIView):
     def get(self, request):
@@ -200,24 +200,25 @@ class PaymentIntentView(APIView):
         if hasattr(order, "payment_intent"):
             return Response({"error": "Payment intent already exists for this order."}, status=400)
 
-        amount=order.total
-        
-        if amount<=0:
-            return Response({"error":"Order total can't be 0, nothing to purchase."}, status=400)
         if order.status.lower()=="completed":
             return Response({"error":"This order is already marked as complete."}, status=400)
         
-        intent_id = f"pi_{uuid.uuid4().hex[:10]}"
-        client_secret = f"secret_{uuid.uuid4().hex[:15]}"
+        amount=order.total
+        
+        gateway=Gateway()
+        make_intent=gateway.payment_intent(amount)
         
         payment_intent= PaymentIntent.objects.create(
-            intent_id= intent_id,
+            intent_id= make_intent["intent_id"],
             order=order,
             amount=amount,
-            client_secret= client_secret,
+            client_secret= make_intent["client_secret"],
             status="pending"
             )
         serializer=PaymentIntentSerializer(payment_intent)
+        
+        if not serializer.validate_amount(payment_intent.amount):        
+            return Response(serializer.errors)
         
         return Response(serializer.data, status=201)
         

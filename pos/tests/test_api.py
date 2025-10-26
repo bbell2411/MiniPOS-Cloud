@@ -659,7 +659,7 @@ class TestApi:
         order=Order.objects.create(customer=customers[0])
         response=api_client.post(f"/api/orders/{order.id}/payment-intent/")
         assert response.status_code==400
-        assert response.data["error"]=="Order total can't be 0, nothing to purchase."
+        assert "Order total" in response.data[0]
         
     def test_payment_intent_idempotancy(self, api_client, orders):
         order=orders[0]

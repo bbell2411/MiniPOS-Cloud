@@ -91,10 +91,3 @@ class TestBusinesslogic:
             item.quantity = products[0].stock + 1
             item.save()
             
-         # create payment mock gateway 
-         # and make payment intent
-         # make sure to test and make test 
-         # make sure for updated_at and status management
-         #create payment intent table storing all intents????? idk
-         # post order to payment and if sucessful then mark status as completed in both
-         # err handle
