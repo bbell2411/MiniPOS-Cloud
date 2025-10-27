@@ -55,5 +55,5 @@ class PaymentsSerializer(serializers.ModelSerializer):
     class Meta:
         model=Payments
         fields="__all__"
-        read_only_fields="__all__"
+        read_only_fields=["order", "amount","created_at", "status"]
         

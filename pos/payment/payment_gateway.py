@@ -4,10 +4,10 @@ import uuid
 class Gateway:
     def payment_intent(self, amount):
         if amount<=0:
-            return Response({"error":"Order total cannot be 0 or below."}, status=400)
+            return {"status":"failed","error":"Order total must be more than 0."}
         intent_id = f"pi_{uuid.uuid4().hex[:10]}"
         client_secret = f"secret_{uuid.uuid4().hex[:15]}"
-        return {"intent_id":intent_id, "client_secret":client_secret}
+        return {"status":"success","intent_id":intent_id, "client_secret":client_secret}
     
     def confirm_payment(self, intent, order):
         errors={}
