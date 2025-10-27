@@ -57,20 +57,19 @@ class PaymentIntent(models.Model):
     client_secret=models.CharField(unique=True)
     status=models.CharField(choices=[ 
         ('pending', 'Pending'),
-        ('completed', 'Completed')])
+        ('completed', 'Completed'),
+        ("failed", "Failed")], default="pending")
     created_at=models.DateTimeField(auto_now_add=True)
-
         
 class Payments(models.Model):
     order=models.OneToOneField(Order, on_delete=models.CASCADE, related_name="payment")
     amount=models.PositiveIntegerField()
     status=models.CharField(max_length=20, choices=[
         ('pending', 'Pending'),
-        ('completed', 'Completed'),
-        ('failed', 'Failed'),
+        ('refunded', 'Refunded'),
+        ('success', 'Success'),
     ], default='pending')
     created_at = models.DateTimeField(auto_now_add=True)
-    
     def save(self, *args, **kwargs):
         if not self.amount:
             self.amount = self.order.total
