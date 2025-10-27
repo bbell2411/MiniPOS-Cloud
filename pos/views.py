@@ -82,6 +82,8 @@ class PaymentIntentView(APIView):
         
         gateway=Gateway()
         make_intent=gateway.payment_intent(amount)
+        if make_intent["status"]=="failed":
+            return Response({"error":make_intent["error"]}, status=400)
         
         payment_intent= PaymentIntent.objects.create(
             intent_id= make_intent["intent_id"],

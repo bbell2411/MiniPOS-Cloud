@@ -659,7 +659,7 @@ class TestApi:
         order=Order.objects.create(customer=customers[0])
         response=api_client.post(f"/api/orders/{order.id}/payment-intent/")
         assert response.status_code==400
-        assert response.data["error"]=="This order is already marked as complete."
+        assert response.data["error"]=="Order total must be more than 0."
         
     def test_payment_intent_idempotancy(self, api_client, orders):
         order=orders[0]
@@ -679,5 +679,35 @@ class TestApi:
         
         payment_intent = PaymentIntent.objects.get(order=order)
         assert payment_intent.amount != order.total  
+        
+    def test_payment_process(self, api_client,orders):
+        order= orders[0]
+        intent_res=api_client.post(f"/api/orders/{order.id}/payment-intent/")
+        assert intent_res.status_code==201
+        
+        payment_intent= PaymentIntent.objects.get(order=order)
+        
+        response=api_client.post(f"/api/orders/{order.id}/payment/{payment_intent.id}/")
+        assert response.status_code==201
+        
+        assert response.data["order"]==order.id
+        assert response.data["status"].lower()!="pending"
+        assert response.data["amount"]==payment_intent.amount
+        assert "created_at" in response.data
+        order.refresh_from_db()
+        assert order.status == "completed"
+
+        payment_intent.refresh_from_db()
+        assert payment_intent.status == "completed"
+
+        
+        payment=Payments.objects.get(id=response.data["id"])
+        assert response.data["order"]==payment.order.id
+        assert response.data["status"]==payment.status
+        assert response.data["amount"]==payment.amount
+        
+        
+        
+        
         
         
