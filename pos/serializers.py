@@ -50,14 +50,10 @@ class PaymentIntentSerializer(serializers.ModelSerializer):
         model= PaymentIntent
         fields = ["id", "order", "amount", "client_secret", "status", "created_at"]
         read_only_fields = ["id", "order", "client_secret", "status", "created_at", "amount"]
-    def validate_amount(self, value):
-        if value<=0:
-            raise serializers.ValidationError("Order total can't be 0, nothing to purchase.")
-        return value
         
 class PaymentsSerializer(serializers.ModelSerializer):
     class Meta:
         model=Payments
         fields="__all__"
-        read_only_fields=["amount","created_at"]
+        read_only_fields="__all__"
         

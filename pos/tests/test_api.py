@@ -659,7 +659,7 @@ class TestApi:
         order=Order.objects.create(customer=customers[0])
         response=api_client.post(f"/api/orders/{order.id}/payment-intent/")
         assert response.status_code==400
-        assert "Order total" in response.data[0]
+        assert response.data["error"]=="This order is already marked as complete."
         
     def test_payment_intent_idempotancy(self, api_client, orders):
         order=orders[0]

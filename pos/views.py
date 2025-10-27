@@ -64,6 +64,35 @@ class CustomerDetailView(APIView):
             return Response(status=204)
         except Customer.DoesNotExist:
             return Response({"error":"Customer not found."},status=404)
+    
+class PaymentIntentView(APIView):
+    def post(self, request, order_id):
+        try:
+            order= Order.objects.get(id=order_id)
+        except Order.DoesNotExist:
+            return Response({"error":"Order not found."}, status=404)
+        
+        if hasattr(order, "payment_intent"):
+            return Response({"error": "Payment intent already exists for this order."}, status=400)
+
+        if order.status.lower()=="completed":
+            return Response({"error":"This order is already marked as complete."}, status=400)
+        
+        amount=order.total
+        
+        gateway=Gateway()
+        make_intent=gateway.payment_intent(amount)
+        
+        payment_intent= PaymentIntent.objects.create(
+            intent_id= make_intent["intent_id"],
+            order=order,
+            amount=amount,
+            client_secret= make_intent["client_secret"],
+            status="pending"
+            )
+        serializer=PaymentIntentSerializer(payment_intent)
+        
+        return Response(serializer.data, status=201)
         
 class PaymentsListView(APIView):
     def get(self, request):
@@ -190,36 +219,35 @@ class OrderItemsListView(APIView):
         item.delete()
         return Response(status=204)
     
-class PaymentIntentView(APIView):
-    def post(self, request, order_id):
-        try:
-            order= Order.objects.get(id=order_id)
-        except Order.DoesNotExist:
-            return Response({"error":"Order not found."}, status=404)
-        
-        if hasattr(order, "payment_intent"):
-            return Response({"error": "Payment intent already exists for this order."}, status=400)
+class PaymentProcessView(APIView):
+        def post(self, request, order_id, payment_intent_id):
+            try:
+                order= Order.objects.get(id=order_id)
+                intent=PaymentIntent.objects.select_related("order").get(id=payment_intent_id)
+            except Order.DoesNotExist:
+                return Response({"error":"Order not found."}, status=404)
+            except PaymentIntent.DoesNotExist:
+                return Response({"error":"Payment Intent not found."}, status=404)
+            
+            gateway=Gateway()
+            
+            confirm_payment=gateway.confirm_payment(intent, order)
+            
+            if confirm_payment["status"]=="failed":
+                intent.status="failed"
+                intent.save()
+                return Response({
+                    "status": "failed",
+                    "errors": confirm_payment["reason"]
+                }, status=400)
 
-        if order.status.lower()=="completed":
-            return Response({"error":"This order is already marked as complete."}, status=400)
-        
-        amount=order.total
-        
-        gateway=Gateway()
-        make_intent=gateway.payment_intent(amount)
-        
-        payment_intent= PaymentIntent.objects.create(
-            intent_id= make_intent["intent_id"],
-            order=order,
-            amount=amount,
-            client_secret= make_intent["client_secret"],
-            status="pending"
-            )
-        serializer=PaymentIntentSerializer(payment_intent)
-        
-        if not serializer.validate_amount(payment_intent.amount):        
-            return Response(serializer.errors)
-        
-        return Response(serializer.data, status=201)
-        
-        
+            
+            intent.status = "completed"
+            intent.save()
+
+            order.status = "completed"
+            order.save()
+            
+            payment=Payments.objects.create(order=order, amount=intent.amount, status="success")
+            serializer=PaymentsSerializer(payment)
+            return Response(serializer.data, status=201)
