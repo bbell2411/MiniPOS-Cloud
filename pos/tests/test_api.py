@@ -733,7 +733,52 @@ class TestApi:
         assert response.status_code==400
         assert "amount" in response.data["errors"]
         
-        # idempotanct
-        #status check
-        # gateway check
-        # order id same as intent order id
+    def test_payment_process_idempotancy_400(self, api_client, orders):
+        order=orders[0]
+        intent_res=api_client.post(f"/api/orders/{order.id}/payment-intent/")
+        assert intent_res.status_code==201
+        payment_intent=PaymentIntent.objects.get(order=order)
+        response=api_client.post(f"/api/orders/{order.id}/payment/{payment_intent.id}/")
+        assert response.status_code==201
+        
+        second_response=api_client.post(f"/api/orders/{order.id}/payment/{payment_intent.id}/")
+        assert second_response.status_code==400
+        assert second_response.data["error"]=="This order has already been paid for."
+        
+    def test_payment_process_invalid_intent_status_400(self,api_client, orders):
+        order=orders[0]
+        intent_res=api_client.post(f"/api/orders/{order.id}/payment-intent/")
+        assert intent_res.status_code==201
+        payment_intent=PaymentIntent.objects.get(order=order)
+        payment_intent.status="completed"
+        payment_intent.save()
+        
+        response=api_client.post(f"/api/orders/{order.id}/payment/{payment_intent.id}/")
+        assert response.status_code==400
+        assert "intent_status" in response.data["errors"]
+        
+    def test_payment_process_invalid_order_status_400(self,api_client, orders):
+        order=orders[0]
+        intent_res=api_client.post(f"/api/orders/{order.id}/payment-intent/")
+        assert intent_res.status_code==201
+        
+        payment_intent=PaymentIntent.objects.get(order=order)
+        order.status = "completed"
+        order.save()
+        
+        response=api_client.post(f"/api/orders/{order.id}/payment/{payment_intent.id}/")
+        assert response.status_code==400
+        assert "order_status" in response.data["errors"]
+    
+    def test_payment_process_incorrect_order_400(self, api_client, orders):
+        order=orders[0]
+        wrong_order=orders[1]
+        intent_res=api_client.post(f"/api/orders/{order.id}/payment-intent/")
+        assert intent_res.status_code==201
+        
+        payment_intent=PaymentIntent.objects.get(order=order)
+        
+        response=api_client.post(f"/api/orders/{wrong_order.id}/payment/{payment_intent.id}/")
+        assert response.status_code==400
+        assert "order" in response.data["errors"]
+        # idempotancy/status check for payment intent too?

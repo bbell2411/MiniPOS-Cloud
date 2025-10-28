@@ -231,6 +231,11 @@ class PaymentProcessView(APIView):
             except PaymentIntent.DoesNotExist:
                 return Response({"error":"Payment Intent not found."}, status=404)
             
+            if Payments.objects.filter(order=order).exists():
+                return Response(
+                    {"error": "This order has already been paid for."},
+                    status=400)
+
             gateway=Gateway()
             
             confirm_payment=gateway.confirm_payment(intent, order)
@@ -243,7 +248,6 @@ class PaymentProcessView(APIView):
                     "errors": confirm_payment["reason"]
                 }, status=400)
 
-            
             intent.status = "completed"
             intent.save()
 
