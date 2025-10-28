@@ -706,8 +706,34 @@ class TestApi:
         assert response.data["status"]==payment.status
         assert response.data["amount"]==payment.amount
         
+    def test_payment_process_order_not_found_404(self, api_client, orders):
+        order= orders[0]
+        intent_res=api_client.post(f"/api/orders/{order.id}/payment-intent/")
+        assert intent_res.status_code==201
+        payment_intent=PaymentIntent.objects.get(order=order)
         
+        response=api_client.post(f"/api/orders/874/payment/{payment_intent.id}/")
+        assert response.status_code==404
+        assert response.data["error"]=="Order not found."
+    
+    def test_payment_process_intent_not_found_404(self, api_client, orders):
+        order= orders[0]
+        response=api_client.post(f"/api/orders/{order.id}/payment/87487/")
+        assert response.status_code==404
+        assert response.data["error"]=="Payment Intent not found."
+    
+    def test_payment_process_invalid_amount_400(self, api_client, orders):
+        order=orders[0]
+        intent_res=api_client.post(f"/api/orders/{order.id}/payment-intent/")
+        assert intent_res.status_code==201
+        payment_intent=PaymentIntent.objects.get(order=order)
+        payment_intent.amount=0
+        payment_intent.save()
+        response=api_client.post(f"/api/orders/{order.id}/payment/{payment_intent.id}/")
+        assert response.status_code==400
+        assert "amount" in response.data["errors"]
         
-        
-        
-        
+        # idempotanct
+        #status check
+        # gateway check
+        # order id same as intent order id

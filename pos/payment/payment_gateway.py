@@ -14,6 +14,9 @@ class Gateway:
         if intent.order.id!=order.id:
             errors["order"]="Payment intent does not belong to this order."
         
+        if intent.amount<=0:
+            errors["amount"]="Amount must be 0 or more."
+        
         if intent.order.status.lower()!="pending":
             errors["order_status"]="Only pending orders can be processed."
             
