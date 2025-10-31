@@ -1,11 +1,20 @@
 import uuid
+from ..models import PaymentIntent
 
 class Gateway:
-    def payment_intent(self, amount):
+    def payment_intent(self, order, amount):
+        if PaymentIntent.objects.filter(order=order).exists():
+           return {"status":"failed", "error": "Payment intent already exists for this order."}
+       
+        if order.status.lower()!="pending":
+            return {"status":"failed","error":"Only pending orders can be processed."}
+        
         if amount<=0:
             return {"status":"failed","error":"Order total must be more than 0."}
+        
         intent_id = f"pi_{uuid.uuid4().hex[:10]}"
         client_secret = f"secret_{uuid.uuid4().hex[:15]}"
+        
         return {"status":"success","intent_id":intent_id, "client_secret":client_secret}
     
     def confirm_payment(self, intent, order):
