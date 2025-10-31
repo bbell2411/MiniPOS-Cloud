@@ -6,7 +6,6 @@ from .payment.payment_gateway import Gateway
 
 class ProductListView(APIView):
     def get(self, request):
-        """Get all products"""
         products=Product.objects.all()
         serializer=ProductSerializer(products, many=True)
         return Response(serializer.data)
@@ -72,16 +71,10 @@ class PaymentIntentView(APIView):
         except Order.DoesNotExist:
             return Response({"error":"Order not found."}, status=404)
         
-        if hasattr(order, "payment_intent"):
-            return Response({"error": "Payment intent already exists for this order."}, status=400)
-
-        if order.status.lower()=="completed":
-            return Response({"error":"This order is already marked as complete."}, status=400)
-        
         amount=order.total
         
         gateway=Gateway()
-        make_intent=gateway.payment_intent(amount)
+        make_intent=gateway.payment_intent(order,amount)
         if make_intent["status"]=="failed":
             return Response({"error":make_intent["error"]}, status=400)
         

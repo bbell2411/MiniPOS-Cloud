@@ -653,7 +653,7 @@ class TestApi:
         order.save()
         response=api_client.post(f"/api/orders/{order.id}/payment-intent/")
         assert response.status_code==400
-        assert response.data["error"]=="This order is already marked as complete."
+        assert response.data["error"]=="Only pending orders can be processed."
         
     def test_payment_intent_invalid_order_amount_400(self, api_client, customers):
         order=Order.objects.create(customer=customers[0])
@@ -781,4 +781,3 @@ class TestApi:
         response=api_client.post(f"/api/orders/{wrong_order.id}/payment/{payment_intent.id}/")
         assert response.status_code==400
         assert "order" in response.data["errors"]
-        # idempotancy/status check for payment intent too?
