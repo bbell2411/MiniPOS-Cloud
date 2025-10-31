@@ -680,6 +680,14 @@ class TestApi:
         payment_intent = PaymentIntent.objects.get(order=order)
         assert payment_intent.amount != order.total  
         
+    # def test_payment_intent_cancelled_order_404(self, api_client, orders):
+    #     order=orders[0]
+    #     post_response=api_client.post(f"/api/orders/{order.id}/payment-intent/")
+    #     post_response.status_code==20989
+        
+        # delete_response=api_client.delete(f"/api/orders/{order.id}/")
+        # delete_response.status_code==2012
+        
     def test_payment_process(self, api_client,orders):
         order= orders[0]
         intent_res=api_client.post(f"/api/orders/{order.id}/payment-intent/")
